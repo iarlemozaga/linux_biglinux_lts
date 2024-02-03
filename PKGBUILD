@@ -3,17 +3,13 @@
 # Archlinux maintainers:
 # Tobias Powalowski <tpowa@archlinux.org>
 # Thomas Baechler <thomas@archlinux.org>
-# URL para obter a última versão estável do kernel
+# Obter a versão mais recente
 latest_version=$(curl -s https://www.kernel.org/ | grep -oP 'linux-\K\d+\.\d+\.\d+' | head -n1)
 
 if [ -n "$latest_version" ]; then
-  # Dividir a versão em partes
-  major_version=$(echo "$latest_version" | cut -d. -f1)
-  minor_version=$(echo "$latest_version" | cut -d. -f2)
-
-  # Atualizar pkgver e _basekernel
+  # Atualizar pkgver, _basekernel e _kernelname
   sed -i "s/^pkgver=.*/pkgver=$latest_version/" PKGBUILD
-  sed -i "s/^_basekernel=.*/_basekernel=$major_version.$minor_version/" PKGBUILD
+  sed -i "s/^_basekernel=.*/_basekernel=$(echo "$latest_version" | cut -d. -f1-2)/" PKGBUILD
   sed -i "s/^_kernelname=.*/_kernelname=-BIGLINUX/" PKGBUILD
   sed -i "s/^pkgrel=.*/pkgrel=1/" PKGBUILD
 
