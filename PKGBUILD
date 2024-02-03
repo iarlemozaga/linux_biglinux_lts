@@ -18,6 +18,17 @@ if [ -n "$latest_version" ]; then
   sed -i "s/^pkgver=.*/pkgver=$latest_version/" PKGBUILD
   sed -i "s/^_basekernel=.*/_basekernel=$major_version.$minor_version/" PKGBUILD
 
+  # Atualizar kernelname
+  sed -i "s/^_kernelname=.*/_kernelname=-BIGLINUX/" PKGBUILD
+
+  # Restante do seu PKGBUILD...
+  sed -i "s/_basekernel=.*/_basekernel=$_basekernel/" PKGBUILD
+  sed -i "s/pkgver=.*/pkgver=$pkgver/" PKGBUILD
+else
+  echo "Não foi possível obter a versão mais recente estável do kernel."
+  exit 1
+fi
+
 _kernelname=-BIGLINUX
 pkgbase=linux${_basever}
 pkgname=("$pkgbase" "$pkgbase-headers")
