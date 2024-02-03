@@ -4,9 +4,6 @@
 # Tobias Powalowski <tpowa@archlinux.org>
 # Thomas Baechler <thomas@archlinux.org>
 # URL para obter a última versão estável do kernel
-kernel_stable_url="https://www.kernel.org/feeds/kdist.xml"
-
-# Obter a versão mais recente
 latest_version=$(curl -s https://www.kernel.org/ | grep -oP 'linux-\K\d+\.\d+\.\d+' | head -n1)
 
 if [ -n "$latest_version" ]; then
@@ -17,9 +14,8 @@ if [ -n "$latest_version" ]; then
   # Atualizar pkgver e _basekernel
   sed -i "s/^pkgver=.*/pkgver=$latest_version/" PKGBUILD
   sed -i "s/^_basekernel=.*/_basekernel=$major_version.$minor_version/" PKGBUILD
-
-  # Atualizar kernelname
   sed -i "s/^_kernelname=.*/_kernelname=-BIGLINUX/" PKGBUILD
+  sed -i "s/^pkgrel=.*/pkgrel=1/" PKGBUILD
 
   # Restante do seu PKGBUILD...
 else
