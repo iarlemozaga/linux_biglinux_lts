@@ -30,13 +30,12 @@ fi
 _kernelname=-BIGLINUX
 pkgbase=linux${_basever}
 pkgname=("$pkgbase" "$pkgbase-headers")
-pkgver=6.6.15
 pkgrel=1
 arch=('x86_64')
 url="https://www.kernel.org/"
 license=('GPL2')
 makedepends=(bc docbook-xsl libelf pahole python-sphinx git inetutils kmod xmlto cpio perl tar xz)
-options=('!strip' '!check')
+options=('!strip')
 source=(https://git.kernel.org/torvalds/t/linux-${_basekernel}.tar.gz
         https://www.kernel.org/pub/linux/kernel/v6.x/patch-${pkgver}.xz
         config
