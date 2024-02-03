@@ -4,18 +4,14 @@
 # Tobias Powalowski <tpowa@archlinux.org>
 # Thomas Baechler <thomas@archlinux.org>
 # Obter a versão mais recente
-# Obter a versão mais recente
 latest_version=$(curl -s https://www.kernel.org/ | grep -oP 'linux-\K\d+\.\d+\.\d+' | head -n1)
 
 if [ -n "$latest_version" ]; then
   # Atualizar pkgver, _basekernel, _kernelname e pkgrel
-  awk -v latest_version="$latest_version" '
-    /^pkgver=/ { print "pkgver=" latest_version; next }
-    /^_basekernel=/ { split(latest_version, version_parts, "."); print "_basekernel=" version_parts[1] "." version_parts[2]; next }
-    /^_kernelname=/ { print "_kernelname=-BIGLINUX"; next }
-    /^pkgrel=/ { print "pkgrel=1"; next }
-    { print }
-  ' PKGBUILD > PKGBUILD.new && mv PKGBUILD.new PKGBUILD
+  sed -i "s/^pkgver=.*/pkgver=$latest_version/" PKGBUILD
+  sed -i "s/^_basekernel=.*/_basekernel=${latest_version%.*}/" PKGBUILD
+  sed -i "s/^_kernelname=.*/_kernelname=-BIGLINUX/" PKGBUILD
+  sed -i "s/^pkgrel=.*/pkgrel=1/" PKGBUILD
 
   # Restante do seu PKGBUILD...
 else
@@ -73,31 +69,31 @@ else
   _srcdir="linux-${_basekernel}-${_rc}"
 fi
 
-# sha256sums=('9a72c005a62f109f96ee00552502d16c4f06c248e6baba1629506627396ac0a7'
-#             '88a4e0bb1cb0dfadda16e0ca19b34138fcf15cbdf3902cddfa498de51f25174c'
-#             'e508623ccc41e3bdf8923878332912ea781d5dea3131c7b23dcfb4199adb8f19'
-#             '05f04019d4a2ee072238c32860fa80d673687d84d78ef436ae9332b6fb788467'
-#             'e1d17690dd21e8d5482b63ca66bfe6b478d39e8e8b59eedd53adb0a55ebc308d'
-#             'a99b684fe5bc7fdacc6f5b1f2b6593672fc5d1e676c4de03ec29723747fc574b'
-#             'b099ae83a3b561b8bff8b32b44b6f4835b99eb150c2314177aa0bc8ca96e2ead'
-#             '10b60663195a65ec3b0f50b49e4c0af952369ee5afe95e11a69ffccefc020eb2'
-#             '3c8b877dfaf85acf45b54c85a44fa269aa1512ea3781fe551cf6d4e2d69c992d'
-#             '73aa4be8c1abcf1b24c9a5c5072e68da3da82df807f3ff49660a100d7634da1d'
-#             '836e88044263f7bc474ca466b3d0d98c39e265db94925c300d0b138492946a13'
-#             'd673d034fbcd80426fd8d9c6af56537c5fe5b55fe49d74e313474d7fc285ecc1'
-#             '1f62542a889a6c2eafd43acd0699f54720ed891eeda66a4a9261d75b92f28b7f'
-#             '6bc2c1b9a485c852b45e4064e8b9b559b9b26113fdc80bf9653af44c0886fde2'
-#             '559f01074cda3c161996617f1b7bc6cbbce0efc50e2cf9e843d60922ff2e8063'
-#             '79970a4729572cb25fd4644d66f38ecd5b3e1610a42ea4bbe436b501f3469fa2'
-#             '430a7f971d78d0873708e0ad38fba602ceafefd4da8ebbf9d9c591bc4799acb5'
-#             'cfcd5c177423df8b7b98b0500fe7ab0757f895ed945c33e205963f0069c7a3be'
-#             '708a9899f80db35fb0f06e0144c361eac9a9b2d154cf2fa388a0b4810847e24c'
-#             '514fd03c17245ed0aaee63e8830c9b02b00efa0307f7e0989065edec6ae185f0'
-#             'fccdf24b25620dd8271bb3b52ddc53f8882dec26518258dc47e1469fed33e516'
-#             'c3b901db58288b5cc5d8a947ac8ffec339870b00aba493d68a39f65c4ff3d869'
-#             '5792a59a0c726a205ae1c1728700ea3e6385231cadc2cfdd2db08295b100638c'
-#             '7c948773d758418d8a436067265d678c444827562c46b9fced2ff31ced108481'
-#             '17cf2ca80aa3f4d9b955d00e885cb0b91488bb25c2756d198a820b8820e59656')
+sha256sums=('9a72c005a62f109f96ee00552502d16c4f06c248e6baba1629506627396ac0a7'
+            '88a4e0bb1cb0dfadda16e0ca19b34138fcf15cbdf3902cddfa498de51f25174c'
+            'e508623ccc41e3bdf8923878332912ea781d5dea3131c7b23dcfb4199adb8f19'
+            '05f04019d4a2ee072238c32860fa80d673687d84d78ef436ae9332b6fb788467'
+            'e1d17690dd21e8d5482b63ca66bfe6b478d39e8e8b59eedd53adb0a55ebc308d'
+            'a99b684fe5bc7fdacc6f5b1f2b6593672fc5d1e676c4de03ec29723747fc574b'
+            'b099ae83a3b561b8bff8b32b44b6f4835b99eb150c2314177aa0bc8ca96e2ead'
+            '10b60663195a65ec3b0f50b49e4c0af952369ee5afe95e11a69ffccefc020eb2'
+            '3c8b877dfaf85acf45b54c85a44fa269aa1512ea3781fe551cf6d4e2d69c992d'
+            '73aa4be8c1abcf1b24c9a5c5072e68da3da82df807f3ff49660a100d7634da1d'
+            '836e88044263f7bc474ca466b3d0d98c39e265db94925c300d0b138492946a13'
+            'd673d034fbcd80426fd8d9c6af56537c5fe5b55fe49d74e313474d7fc285ecc1'
+            '1f62542a889a6c2eafd43acd0699f54720ed891eeda66a4a9261d75b92f28b7f'
+            '6bc2c1b9a485c852b45e4064e8b9b559b9b26113fdc80bf9653af44c0886fde2'
+            '559f01074cda3c161996617f1b7bc6cbbce0efc50e2cf9e843d60922ff2e8063'
+            '79970a4729572cb25fd4644d66f38ecd5b3e1610a42ea4bbe436b501f3469fa2'
+            '430a7f971d78d0873708e0ad38fba602ceafefd4da8ebbf9d9c591bc4799acb5'
+            'cfcd5c177423df8b7b98b0500fe7ab0757f895ed945c33e205963f0069c7a3be'
+            '708a9899f80db35fb0f06e0144c361eac9a9b2d154cf2fa388a0b4810847e24c'
+            '514fd03c17245ed0aaee63e8830c9b02b00efa0307f7e0989065edec6ae185f0'
+            'fccdf24b25620dd8271bb3b52ddc53f8882dec26518258dc47e1469fed33e516'
+            'c3b901db58288b5cc5d8a947ac8ffec339870b00aba493d68a39f65c4ff3d869'
+            '5792a59a0c726a205ae1c1728700ea3e6385231cadc2cfdd2db08295b100638c'
+            '7c948773d758418d8a436067265d678c444827562c46b9fced2ff31ced108481'
+            '17cf2ca80aa3f4d9b955d00e885cb0b91488bb25c2756d198a820b8820e59656')
 
 prepare() {
   cd "$_srcdir"
