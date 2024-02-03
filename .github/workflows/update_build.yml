@@ -129,6 +129,7 @@ jobs:
          source PKGBUILD
          popd
          manjVer=${pkgver}-$pkgrel
+         echo $manjVer
 
          manjPkgVer=$pkgver
          manjPkgRel=$pkgrel
@@ -137,6 +138,7 @@ jobs:
           source PKGBUILD
           popd
           localVer=${pkgver}-$pkgrel
+          echo $localVer
 
           bigpkgVer=$pkgver
           bigpkgRel=$pkgrel
