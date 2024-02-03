@@ -1,0 +1,183 @@
+name: Update and Build Package
+
+on:
+  workflow_dispatch:
+
+  push:
+    branches: [ "*" ]
+
+  schedule:
+    - cron:  '30 2 * * *'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Dependencies
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install \
+          build-essential \
+          cmake \
+          fakeroot \
+          git \
+          libarchive-dev \
+          libarchive-tools \
+          libcurl4-openssl-dev \
+          libgpgme-dev \
+          libssl-dev \
+          zip \
+          python3-pip
+          sudo pip3 install meson
+          sudo pip3 install ninja
+
+      - name: install pacman
+        shell: bash
+        env:
+          PACMAN_VERSION: 6.0.1
+        run: |
+          sudo git clone --depth 1 https://gitlab.manjaro.org/packages/core/pacman.git
+          pushd pacman
+          sudo wget https://sources.archlinux.org/other/pacman/pacman-${PACMAN_VERSION}.tar.xz
+          sudo tar -xvf pacman-${PACMAN_VERSION}.tar.xz
+          pushd pacman-${PACMAN_VERSION}
+          sudo patch -p1 -i ../pacman-sync-first-option.patch
+          sudo meson --prefix=/usr \
+                      --buildtype=plain \
+                      -Ddoc=disabled \
+                      -Ddoxygen=enabled \
+                      -Dscriptlet-shell=/usr/bin/bash \
+                      -Dldconfig=/usr/bin/ldconfig \
+                      build
+          sudo meson compile -C build
+          sudo meson install -C build
+          popd
+          sudo install -m644 pacman.conf /etc/pacman.conf
+          sudo install -m644 makepkg.conf /etc/
+          sudo mkdir -p /etc/pacman.d
+          sudo touch /etc/pacman.d/mirrorlist
+          popd
+          sudo rm -rf pacman
+
+          #add biglinux repository
+          sudo sed -i '/\[core\]/{h;s/.*/\[biglinux-update-stable\]/;p;x;}' /etc/pacman.conf
+          sudo sed -i '/\[core\]/{h;s/.*/SigLevel = PackageRequired/;p;x;}' /etc/pacman.conf
+          sudo sed -i '/\[core\]/{h;s/.*/Server = https:\/\/repo.biglinux.com.br\/update-stable\/$arch/;p;x;}' /etc/pacman.conf
+          sudo sed -i '/\[core\]/{h;s/.*//;p;x;}' /etc/pacman.conf
+          echo '
+          [biglinux-testing]
+          SigLevel = PackageRequired
+          Server = https://${{ secrets.DEV_REPOSITORY }}.biglinux.com.br/testing/$arch' | sudo tee -a /etc/pacman.conf
+          echo '
+          [biglinux-stable]
+          SigLevel = PackageRequired
+          Server = https://${{ secrets.DEV_REPOSITORY }}.biglinux.com.br/stable/$arch' | sudo tee -a /etc/pacman.conf
+
+          #Mirrorlist
+          echo 'Server = https://mnvoip.mm.fcix.net/manjaro/stable/$repo/$arch' | sudo tee -a /etc/pacman.d/mirrorlist
+
+      - name: install keyrings
+        shell: bash
+        run: |
+          sudo install -dm755 /usr/share/pacman/keyrings/
+          sudo git clone --depth 1 https://gitlab.manjaro.org/packages/core/manjaro-keyring.git
+          pushd manjaro-keyring
+            sudo install -m0644 manjaro.gpg /usr/share/pacman/keyrings/
+            sudo install -m0644 manjaro-trusted /usr/share/pacman/keyrings/
+            sudo install -m0644 manjaro-trusted /usr/share/pacman/keyrings/
+          popd
+          sudo rm -rf manjaro-keyring
+          mkdir -p archlinux-keyring
+          pushd archlinux-keyring
+            wget https://archlinux.org/packages/core/any/archlinux-keyring/download -O /tmp/archlinux-keyring.tar.zst
+            tar --use-compress-program=unzstd --strip-components=4 --wildcards -xvf /tmp/archlinux-keyring.tar.zst usr/share/pacman/keyrings/*
+            sudo install -m0644 archlinux.gpg /usr/share/pacman/keyrings/
+            sudo install -m0644 archlinux-trusted /usr/share/pacman/keyrings/
+            sudo install -m0644 archlinux-revoked /usr/share/pacman/keyrings/
+          popd
+          sudo rm -rf archlinux-keyring
+          sudo git clone --depth 1 https://github.com/biglinux/biglinux-keyring.git
+          pushd biglinux-keyring
+            sudo install -m0644 biglinux.gpg /usr/share/pacman/keyrings/
+            sudo install -m0644 biglinux-trusted /usr/share/pacman/keyrings/
+            sudo install -m0644 biglinux-trusted /usr/share/pacman/keyrings/
+          popd
+          sudo rm -rf biglinux-keyring
+
+      - name: pull keys
+        shell: bash
+        run: |
+          sudo git clone https://github.com/biglinux/biglinux-key.git
+          sudo mkdir -p /etc/pacman.d/gnupg/
+          sudo cp -r biglinux-key/usr/share/pacman/keyrings/* /etc/pacman.d/gnupg/
+          sudo rm -r biglinux-key
+          sudo pacman -Sy
+
+      # # Tmate ##
+      # - name: Setup tmate session
+      #   uses: mxschmitt/action-tmate@v3
+
+      - name: Update kernel-lts
+        shell: bash
+        run: |
+         git clone https://gitlab.manjaro.org/packages/core/linux66.git
+         pushd linux66
+         source PKGBUILD
+         popd
+         manjVer=${pkgver}-$pkgrel
+
+         manjPkgVer=$pkgver
+         manjPkgRel=$pkgrel
+
+          pushd linux_biglinux_lts
+          source PKGBUILD
+          popd
+          localVer=${pkgver}-$pkgrel
+
+          bigpkgVer=$pkgver
+          bigpkgRel=$pkgrel
+
+          echo "manjVer=$manjVer" >> $GITHUB_ENV
+
+          cancel () {
+            echo "Sem atualiza de versão"
+            echo "SAINDO...."
+            curl -s -H "Authorization: token ${{ github.token }}" \
+            -X POST "https://api.github.com/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/cancel"
+            sleep infinity
+          }
+
+          if [ "$manjVer" != "$localVer" ];then
+            rm -r linux_biglinux_lts/*
+            cp -a linux66/ linux_biglinux_lts/
+            rm -r linux66
+
+            pushd pkgbuild
+            sed -i "s/pkgver=.*/pkgver=$manjVer/" PKGBUILD
+            sed -i "s/pkgrel=.*/pkgrel=$manjPkgRel/" PKGBUILD
+            sed -i "s/_kernelname=.*/_kernelname=-BIGLINUX/" PKGBUILD
+            sed -i "s/pkgbase=.*/pkgbase=linux-biglinux-lts/" PKGBUILD
+            sed -i "s/package_linux66/package_linux-biglinux-lts/g" PKGBUILD
+          else
+            cancel
+          fi
+
+      - name: Update github
+        run: |
+          git config --local user.email "${{ secrets.GIT_USER }}@users.noreply.github.com"
+          git config --local user.name "${{ secrets.GIT_USER }}"
+          if [ -n "$(git commit -m "$manjVer" -a | grep "nothing to commit")" ];then exit 0; fi
+
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref }}
+
+      - name: Send Hooks BigLinux Build Package
+        shell: bash
+        run: |
+          curl -X POST -H "Accept: application/json" -H "Authorization: token ${{ secrets.WEBHOOK_TOKEN }}" --data '{"event_type": "${{ github.repository }}", "client_payload": { "branch": "${{ github.ref_name }}", "url": "https://github.com/${{ github.repository }}"}}' https://api.github.com/repos/iarlemozaga/build-package/dispatches
