@@ -14,19 +14,9 @@ if [ -n "$latest_version" ]; then
   major_version=$(echo "$latest_version" | cut -d. -f1)
   minor_version=$(echo "$latest_version" | cut -d. -f2)
 
-  # Atualizar pkgver
-  pkgver="$latest_version"
-
-  # Atualizar _basekernel
-  _basekernel="$major_version.$minor_version"
-
-  # Restante do seu PKGBUILD...
-  sed -i "s/_basekernel=.*/_basekernel=$_basekernel/" PKGBUILD
-  sed -i "s/pkgver=.*/pkgver=$pkgver/" PKGBUILD
-else
-  echo "Não foi possível obter a versão mais recente estável do kernel."
-  exit 1
-fi
+  # Atualizar pkgver e _basekernel
+  sed -i "s/^pkgver=.*/pkgver=$latest_version/" PKGBUILD
+  sed -i "s/^_basekernel=.*/_basekernel=$major_version.$minor_version/" PKGBUILD
 
 _kernelname=-BIGLINUX
 pkgbase=linux${_basever}
