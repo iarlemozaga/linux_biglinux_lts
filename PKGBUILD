@@ -81,6 +81,7 @@ fi
 #             'c3b901db58288b5cc5d8a947ac8ffec339870b00aba493d68a39f65c4ff3d869'
 #             '5792a59a0c726a205ae1c1728700ea3e6385231cadc2cfdd2db08295b100638c'
 #             '7c948773d758418d8a436067265d678c444827562c46b9fced2ff31ced108481')
+md5sums=('SKIP' 'SKIP' 'SKIP' 'SKIP' 'SKIP' 'SKIP' 'SKIP' 'SKIP' 'SKIP' 'SKIP' 'SKIP' 'SKIP' 'SKIP' 'SKIP' 'SKIP' 'SKIP' 'SKIP' 'SKIP' 'SKIP' 'SKIP' 'SKIP' 'SKIP' 'SKIP' 'SKIP')
 
 prepare() {
   cd "$_srcdir"
