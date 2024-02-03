@@ -21,7 +21,7 @@ if [ -n "$latest_version" ]; then
   _basekernel="$major_version.$minor_version"
 
   # Restante do seu PKGBUILD...
-  sed -i "s/_basekernel=.*/_basekernel=$_basekernel/" PKGBUILD
+  sed -i "s|_basekernel=.*|_basekernel=$_basekernel|" PKGBUILD
   sed -i "s/pkgver=.*/pkgver=$pkgver/" PKGBUILD
 else
   echo "Não foi possível obter a versão mais recente estável do kernel."
