@@ -3,9 +3,30 @@
 # Archlinux maintainers:
 # Tobias Powalowski <tpowa@archlinux.org>
 # Thomas Baechler <thomas@archlinux.org>
+# URL para obter a última versão estável do kernel
+kernel_stable_url="https://www.kernel.org/feeds/kdist.xml"
 
-_basekernel=6.6
-_basever=${_basekernel//.}
+# Obter a versão mais recente
+latest_version=$(curl -s "$kernel_stable_url" | grep -oP '<title>v([^<]+)' | sed 's/<title>v//')
+
+if [ -n "$latest_version" ]; then
+  # Dividir a versão em partes
+  major_version=$(echo "$latest_version" | cut -d. -f1)
+  minor_version=$(echo "$latest_version" | cut -d. -f2)
+
+  # Atualizar pkgver
+  pkgver="$latest_version"
+
+  # Atualizar _basekernel
+  _basekernel="$major_version.$minor_version"
+
+  # Restante do seu PKGBUILD...
+  sed -i "s/_basekernel=.*/_basekernel=$_basekernel/" PKGBUILD
+  sed -i "s/pkgver=.*/pkgver=$pkgver/" PKGBUILD
+else
+  echo "Não foi possível obter a versão mais recente estável do kernel."
+  exit 1
+fi
 _kernelname=-BIGLINUX
 pkgbase=linux${_basever}
 pkgname=("$pkgbase" "$pkgbase-headers")
@@ -15,7 +36,7 @@ arch=('x86_64')
 url="https://www.kernel.org/"
 license=('GPL2')
 makedepends=(bc docbook-xsl libelf pahole python-sphinx git inetutils kmod xmlto cpio perl tar xz)
-options=('!strip')
+options=('!strip' '!check')
 source=(https://git.kernel.org/torvalds/t/linux-${_basekernel}.tar.gz
         https://www.kernel.org/pub/linux/kernel/v6.x/patch-${pkgver}.xz
         config
