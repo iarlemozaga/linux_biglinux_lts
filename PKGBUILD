@@ -21,12 +21,13 @@ if [ -n "$latest_version" ]; then
   _basekernel="$major_version.$minor_version"
 
   # Restante do seu PKGBUILD...
-  sed -i "s|_basekernel=.*|_basekernel=$_basekernel|" PKGBUILD
-  sed -i "s|pkgver=.*|pkgver=$pkgver|" PKGBUILD
+  sed -i "s/_basekernel=.*/_basekernel=$_basekernel/" PKGBUILD
+  sed -i "s/pkgver=.*/pkgver=$pkgver/" PKGBUILD
 else
   echo "Não foi possível obter a versão mais recente estável do kernel."
   exit 1
 fi
+
 _kernelname=-BIGLINUX
 pkgbase=linux${_basever}
 pkgname=("$pkgbase" "$pkgbase-headers")
@@ -169,7 +170,7 @@ package_linux66() {
 
   # Used by mkinitcpio to name the kernel
   echo "${pkgbase}" | install -Dm644 /dev/stdin "${pkgdir}/usr/lib/modules/${_kernver}/pkgbase"
-  echo "${_basekernel}-${CARCH}" | install -Dm644 /dev/stdin "${pkgdir}/usr/lib/modules/${_kernver}/kernelbase"
+  echo "BIGLINUX-${pkgver}-${pkgrel}" | install -Dm644 /dev/stdin "${pkgdir}/usr/lib/modules/${_kernver}/kernelbase"
 
   # add kernel version
   echo "${pkgver}-${pkgrel}-BIGLINUX x64" > "${pkgdir}/boot/${pkgbase}-${CARCH}.kver"
@@ -260,7 +261,7 @@ package_linux66-headers() {
 
   echo "Adding symlink..."
   mkdir -p "${pkgdir}/usr/src"
-  ln -sr "${_builddir}" "${pkgdir}/usr/src/${pkgbase}"
+  ln -sr "${_builddir}" "${pkgdir}/usr/src/BIGLINUX-${pkgver}-${pkgrel}"
 
   # remove unwanted files
   find ${_builddir} -name '*.orig' -delete
