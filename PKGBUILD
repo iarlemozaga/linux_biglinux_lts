@@ -3,25 +3,13 @@
 # Archlinux maintainers:
 # Tobias Powalowski <tpowa@archlinux.org>
 # Thomas Baechler <thomas@archlinux.org>
-# Obter a versão mais recente
-latest_version=$(curl -s https://www.kernel.org/ | grep -oP 'linux-\K\d+\.\d+\.\d+' | head -n1)
 
-if [ -n "$latest_version" ]; then
-  # Atualizar pkgver, _basekernel, _kernelname e pkgrel
-  sed -i "s/^pkgver=.*/pkgver=$latest_version/" PKGBUILD
-  sed -i "s/^_basekernel=.*/_basekernel=${latest_version%.*}/" PKGBUILD
-  sed -i "s/^_kernelname=.*/_kernelname=-BIGLINUX/" PKGBUILD
-  sed -i "s/^pkgrel=.*/pkgrel=1/" PKGBUILD
-
-  # Restante do seu PKGBUILD...
-else
-  echo "Não foi possível obter a versão mais recente estável do kernel."
-  exit 1
-fi
-
+_basekernel=6.6
+_basever=${_basekernel//.}
 _kernelname=-BIGLINUX
 pkgbase=linux${_basever}
 pkgname=("$pkgbase" "$pkgbase-headers")
+pkgver=6.6.15
 pkgrel=1
 arch=('x86_64')
 url="https://www.kernel.org/"
@@ -92,8 +80,7 @@ sha256sums=('9a72c005a62f109f96ee00552502d16c4f06c248e6baba1629506627396ac0a7'
             'fccdf24b25620dd8271bb3b52ddc53f8882dec26518258dc47e1469fed33e516'
             'c3b901db58288b5cc5d8a947ac8ffec339870b00aba493d68a39f65c4ff3d869'
             '5792a59a0c726a205ae1c1728700ea3e6385231cadc2cfdd2db08295b100638c'
-            '7c948773d758418d8a436067265d678c444827562c46b9fced2ff31ced108481'
-            '17cf2ca80aa3f4d9b955d00e885cb0b91488bb25c2756d198a820b8820e59656')
+            '7c948773d758418d8a436067265d678c444827562c46b9fced2ff31ced108481')
 
 prepare() {
   cd "$_srcdir"
@@ -140,7 +127,7 @@ build() {
   make ${MAKEFLAGS} LOCALVERSION= bzImage modules
 }
 
-package_linux66() {
+package_linux-biglinux-lts() {
   pkgdesc="The ${pkgbase/linux/Linux} kernel and modules"
   depends=('coreutils' 'linux-firmware' 'kmod' 'initramfs')
   optdepends=('wireless-regdb: to set the correct wireless channels of your country')
@@ -161,7 +148,7 @@ package_linux66() {
 
   # Used by mkinitcpio to name the kernel
   echo "${pkgbase}" | install -Dm644 /dev/stdin "${pkgdir}/usr/lib/modules/${_kernver}/pkgbase"
-  echo "BIGLINUX-${pkgver}-${pkgrel}" | install -Dm644 /dev/stdin "${pkgdir}/usr/lib/modules/${_kernver}/kernelbase"
+  echo "${_basekernel}-${CARCH}" | install -Dm644 /dev/stdin "${pkgdir}/usr/lib/modules/${_kernver}/kernelbase"
 
   # add kernel version
   echo "${pkgver}-${pkgrel}-BIGLINUX x64" > "${pkgdir}/boot/${pkgbase}-${CARCH}.kver"
@@ -173,7 +160,7 @@ package_linux66() {
   depmod -b "${pkgdir}/usr" -F System.map "${_kernver}"
 }
 
-package_linux66-headers() {
+package_linux-biglinux-lts-headers() {
   pkgdesc="Header files and scripts for building modules for ${pkgbase/linux/Linux} kernel"
   depends=('gawk' 'python' 'libelf' 'pahole')
   provides=("linux-headers=$pkgver")
@@ -252,7 +239,7 @@ package_linux66-headers() {
 
   echo "Adding symlink..."
   mkdir -p "${pkgdir}/usr/src"
-  ln -sr "${_builddir}" "${pkgdir}/usr/src/BIGLINUX-${pkgver}-${pkgrel}"
+  ln -sr "${_builddir}" "${pkgdir}/usr/src/${pkgbase}"
 
   # remove unwanted files
   find ${_builddir} -name '*.orig' -delete
