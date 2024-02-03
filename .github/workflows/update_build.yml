@@ -154,9 +154,9 @@ jobs:
           }
 
           if [ "$manjVer" != "$localVer" ];then
-            rm -r linux_biglinux_lts/*
-            cp -a linux66/ linux_biglinux_lts/
-            rm -r linux66
+            sudo rm -r linux_biglinux_lts/*
+            cp -a linux66/* linux_biglinux_lts
+            sudo rm -r linux66
 
             pushd linux_biglinux_lts
             sed -i "s/pkgver=.*/pkgver=$manjVer/" PKGBUILD
