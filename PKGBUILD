@@ -7,7 +7,7 @@
 kernel_stable_url="https://www.kernel.org/feeds/kdist.xml"
 
 # Obter a versão mais recente
-latest_version=$(curl -s "$kernel_stable_url" | grep -oP '<title>v([^<]+)' | sed 's/<title>v//')
+latest_version=$(curl -s https://www.kernel.org/ | grep -oP 'linux-\K\d+\.\d+\.\d+' | head -n1)
 
 if [ -n "$latest_version" ]; then
   # Dividir a versão em partes
