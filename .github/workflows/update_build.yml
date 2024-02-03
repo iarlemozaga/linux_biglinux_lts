@@ -170,8 +170,8 @@ jobs:
 
       - name: Update github
         run: |
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "github-actions[bot]"
+          git config --local user.email "iarlemozaga@users.noreply.github.com"
+          git config --local user.name "iarlemozaga"
           git add --all
           if [ -n "$(git commit -m "$manjVer" -a | grep "nothing to commit")" ];then exit 0; fi
 
