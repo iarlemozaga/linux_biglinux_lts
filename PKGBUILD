@@ -7,7 +7,7 @@
 _basekernel=6.6
 _basever=${_basekernel//.}
 _kernelname=-BIGLINUX
-pkgbase=linux${_basever}
+pkgbase=linux-biglinux-lts
 pkgname=("$pkgbase" "$pkgbase-headers")
 pkgver=6.6.15
 pkgrel=1
