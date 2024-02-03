@@ -158,7 +158,7 @@ jobs:
             cp -a linux66/ linux_biglinux_lts/
             rm -r linux66
 
-            pushd pkgbuild
+            pushd linux_biglinux_lts
             sed -i "s/pkgver=.*/pkgver=$manjVer/" PKGBUILD
             sed -i "s/pkgrel=.*/pkgrel=$manjPkgRel/" PKGBUILD
             sed -i "s/_kernelname=.*/_kernelname=-BIGLINUX/" PKGBUILD
