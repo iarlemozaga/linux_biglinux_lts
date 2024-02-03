@@ -4,14 +4,18 @@
 # Tobias Powalowski <tpowa@archlinux.org>
 # Thomas Baechler <thomas@archlinux.org>
 # Obter a versão mais recente
+# Obter a versão mais recente
 latest_version=$(curl -s https://www.kernel.org/ | grep -oP 'linux-\K\d+\.\d+\.\d+' | head -n1)
 
 if [ -n "$latest_version" ]; then
-  # Atualizar pkgver, _basekernel e _kernelname
-  sed -i "s/^pkgver=.*/pkgver=$latest_version/" PKGBUILD
-  sed -i "s/^_basekernel=.*/_basekernel=$(echo "$latest_version" | cut -d. -f1-2)/" PKGBUILD
-  sed -i "s/^_kernelname=.*/_kernelname=-BIGLINUX/" PKGBUILD
-  sed -i "s/^pkgrel=.*/pkgrel=1/" PKGBUILD
+  # Atualizar pkgver, _basekernel, _kernelname e pkgrel
+  awk -v latest_version="$latest_version" '
+    /^pkgver=/ { print "pkgver=" latest_version; next }
+    /^_basekernel=/ { split(latest_version, version_parts, "."); print "_basekernel=" version_parts[1] "." version_parts[2]; next }
+    /^_kernelname=/ { print "_kernelname=-BIGLINUX"; next }
+    /^pkgrel=/ { print "pkgrel=1"; next }
+    { print }
+  ' PKGBUILD > PKGBUILD.new && mv PKGBUILD.new PKGBUILD
 
   # Restante do seu PKGBUILD...
 else
