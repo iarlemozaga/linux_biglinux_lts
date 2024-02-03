@@ -116,13 +116,14 @@ jobs:
       #     sudo rm -r biglinux-key
       #     sudo pacman -Sy
 
-      # Tmate ##
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
+      # # Tmate ##
+      # - name: Setup tmate session
+      #   uses: mxschmitt/action-tmate@v3
 
       - name: Update kernel-lts
         shell: bash
         run: |
+         cd ..
          git clone https://gitlab.manjaro.org/packages/core/linux66.git
          pushd linux66
          source PKGBUILD
